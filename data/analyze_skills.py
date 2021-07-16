@@ -1,5 +1,5 @@
 import argparse
-from profile import get_profile_by_name
+from profile import get_profiles_by_id_or_name
 from collections import defaultdict
 import profile
 import sqlite3
@@ -50,17 +50,6 @@ if args.id == 0 and args.name is None:
   print('Specify either the --id or the --name of the profile to analyze')
   exit()
 
-profile_to_analyze = get_profile_by_name(args.id, args.name)
-if profile_to_analyze is None:
-  print('This profile does not exist')
-  exit()
-
-#skills_array = ['Computer Networking', 'Software Development Life Cycle (SDLC)', 'Mathematics']
-
-print("Matching skills for profile:")
-profile_to_analyze.print()
-print("----------")
-
 db_conn_rank = sqlite3.connect('skillneeds.db')
 cursor_rank = db_conn_rank.cursor()
 db_conn_pen = sqlite3.connect('skillpen.db')
@@ -82,15 +71,27 @@ db_conn_pen.close()
 
 industry_to_total_score_dict = {}
 
-for key, value in industry_to_needs_list_dict.items():
-  similarity = jaccard(profile_to_analyze.skills, value)
-  pen_score = calculate_pen_score(industry_to_skill_pen_list_dict, key, profile_to_analyze.skills) 
-  total_score = similarity * pen_score * 100
-  if total_score > 0:
-    industry_to_total_score_dict[key] = total_score
+profiles_to_analyze = get_profiles_by_id_or_name(args.id, args.name)
 
-for key, value in sorted(industry_to_total_score_dict.items(), key = lambda item: item[1], reverse = True):
-  print(key, "-- Match Score: ", value)
+for profile_to_analyze in profiles_to_analyze:
+  if profile_to_analyze is None:
+    print('This profile does not exist')
+    exit()
+
+  #skills_array = ['Computer Networking', 'Software Development Life Cycle (SDLC)', 'Mathematics']
+
+  print("\n\n\n\n")
+  print("----------", "Matching skills for profile:", "----------")
+  profile_to_analyze.print()
+  print("--------------------------------------------------\n")
 
 
+  for key, value in industry_to_needs_list_dict.items():
+    similarity = jaccard(profile_to_analyze.skills, value)
+    pen_score = calculate_pen_score(industry_to_skill_pen_list_dict, key, profile_to_analyze.skills) 
+    total_score = similarity * pen_score * 100
+    if total_score > 0:
+      industry_to_total_score_dict[key] = total_score
 
+  for key, value in sorted(industry_to_total_score_dict.items(), key = lambda item: item[1], reverse = True):
+    print(' > ', key, "-- Match Score: ", value)
