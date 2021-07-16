@@ -1,5 +1,9 @@
-import sqlite3
+import argparse
+from profile import get_profile_by_name
 from collections import defaultdict
+import profile
+import sqlite3
+import sys
 
 COL_INDEX_SKILL_NEEDS_ID = 0
 COL_INDEX_SKILL_NEEDS_YEAR = 1
@@ -26,7 +30,7 @@ def jaccard(list1, list2):
 
 def calculate_pen_score(pen_rate_dict, industry, skills_list):
   match_any = False
-  score = 1;
+  score = 1
   industry_rates = pen_rate_dict[industry]
   for my_skill in skills_list:
     if my_skill in industry_rates:
@@ -37,9 +41,24 @@ def calculate_pen_score(pen_rate_dict, industry, skills_list):
   else:
     return 0.0
 
-skills_array = ['Computer Networking', 'Software Development Life Cycle (SDLC)', 'Mathematics']
+parser = argparse.ArgumentParser()
+parser.add_argument('--id', '-i', help="The id of the profile", type= int, default= 0)
+parser.add_argument('--name', '-n', help="The name of the profile", type= str)
+args=parser.parse_args()
 
-print("Matching for your skills: ", skills_array)
+if args.id == 0 and args.name is None:
+  print('Specify either the --id or the --name of the profile to analyze')
+  exit()
+
+profile_to_analyze = get_profile_by_name(args.id, args.name)
+if profile_to_analyze is None:
+  print('This profile does not exist')
+  exit()
+
+#skills_array = ['Computer Networking', 'Software Development Life Cycle (SDLC)', 'Mathematics']
+
+print("Matching skills for profile:")
+profile_to_analyze.print()
 print("----------")
 
 db_conn_rank = sqlite3.connect('skillneeds.db')
@@ -64,10 +83,11 @@ db_conn_pen.close()
 industry_to_total_score_dict = {}
 
 for key, value in industry_to_needs_list_dict.items():
-  similarity = jaccard(skills_array, value)
-  pen_score = calculate_pen_score(industry_to_skill_pen_list_dict, key, skills_array) 
+  similarity = jaccard(profile_to_analyze.skills, value)
+  pen_score = calculate_pen_score(industry_to_skill_pen_list_dict, key, profile_to_analyze.skills) 
   total_score = similarity * pen_score * 100
-  industry_to_total_score_dict[key] = total_score
+  if total_score > 0:
+    industry_to_total_score_dict[key] = total_score
 
 for key, value in sorted(industry_to_total_score_dict.items(), key = lambda item: item[1], reverse = True):
   print(key, "-- Match Score: ", value)
