@@ -1,20 +1,22 @@
-import sqlite3
+from db_connection import DbConnection
 
 PROFILE_ID_COL_INDEX = 0
 PROFILE_NAME_COL_INDEX = 1
 PROFILE_SKILLSET_COL_INDEX = 2
 PROFILE_CONNECTION_WEIGHT_COL_INDEX = 3
 
-def get_profiles_by_id_or_name(id=0,profile_name=""):
-  if id == 0 and profile_name == "":
+def get_profiles_by_id_or_name(id=0,profile_name=None):
+  if id == 0 and profile_name is None:
     return None
 
-  db_conn = sqlite3.connect('profiles.db')
-  cursor = db_conn.cursor()
+  if profile_name is not None:
+    profile_name = '%' + profile_name + '%'
+
+  db_conn = DbConnection('profiles')
 
   profiles = []
 
-  for row in cursor.execute('select * from profiles where id=? or name like ?;', (id, '%'+profile_name+'%')):
+  for row in db_conn.execute('select * from profiles where id=? or name like ?;', (id, profile_name)):
     profiles.append(Profile(row[PROFILE_ID_COL_INDEX], row[PROFILE_NAME_COL_INDEX], row[PROFILE_SKILLSET_COL_INDEX], row[PROFILE_CONNECTION_WEIGHT_COL_INDEX]))
 
   db_conn.close()
