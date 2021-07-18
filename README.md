@@ -1,4 +1,8 @@
 # LinkedIn_NSBE_Hackathon
+
+![](https://img.shields.io/github/languages/code-size/tonykipkemboi/LinkedIn_NSBE_Hackathon?style=for-the-badge)
+![](https://img.shields.io/github/last-commit/tonykipkemboi/LinkedIn_NSBE_Hackathon?color=blue&style=for-the-badge)
+
 LinkedIn &amp; NSBE Hack Day team project
 
 For an initial load, run `python3 dbload.py`.
